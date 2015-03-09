@@ -1,0 +1,11 @@
+{
+	"settings": {
+		"size": {
+			"thumb": 300,
+			"zoom": 1200
+		}
+	},
+	"albums": [
+		{ "title": "Example album", "folder": "example" } 
+	]
+}
