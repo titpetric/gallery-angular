@@ -1,0 +1,6 @@
+<div class="albums">
+	<a href="#album/{{album.folder}}" class="album" ng-repeat="album in albums">
+		<div class="image" ng-style="{background: '#000 url(out/' + album.folder + '/thumb/' + album.image.file + ') center center no-repeat' }"></div>
+		<p>{{album.title}}</p>
+	</a>
+</div>

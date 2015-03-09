@@ -1,0 +1,118 @@
+#!/usr/bin/php
+<?php
+
+class GalleryGenerator
+{
+	protected function getConfig()
+	{
+		$config = json_decode(@file_get_contents("albums/config.json"), true);
+		if (is_null($config)) {
+			throw new Exception("Can't read albums/albums.json (does file exist? is the syntax valid?)");
+		}
+		foreach ($config['albums'] as $k => $album) {
+			$album['folder'] = trim($album['folder'], '/');
+			$config['albums'][$k] = $album;
+		}
+		return $config;
+	}
+
+	protected function mogrify($to, $size)
+	{
+		@mkdir($to, 0755, true);
+		exec("mogrify -path " . $to . " -resize " . $size . " -format jpg *.jpg");
+	}
+
+	public function run()
+	{
+		$config = $this->getConfig();
+		$settings = $config['settings'];
+		$albums = $config['albums'];
+		unset($config);
+
+		$cwd = dirname(__FILE__) . '/';
+
+		echo sprintf("Found %s albums, processing:\n", count($albums));
+		$i = 0;
+		foreach ($albums as $album) {
+			$i++;
+			if (is_dir("out/" . $album['folder'])) {
+				echo sprintf($i . ". Skipping album '%s' (out/%s exists)\n", $album['title'], $album['folder']);
+				continue;
+			}
+				
+			echo sprintf($i . ". Processing album '%s' (%s)\n", $album['title'], $album['folder']);
+			$source = "albums/" . $album['folder'];
+			chdir($source);
+			foreach (array("thumb", "zoom") as $type) {
+				$size = $settings['size'][$type] . 'x' . $settings['size'][$type];
+				echo " - generating " . $type . " (" . $size . ")\n";
+				$this->mogrify($cwd . "out/" . $album['folder'] . "/" . $type . "/", $size);
+			}
+		}
+
+		chdir($cwd);
+
+		@mkdir("api/albums/", 0755, true);
+
+		foreach ($albums as $k => $album) {
+			$album_file = "albums/" . $album['folder'] . "/album.json";
+			$api_album_file = "api/albums/" . $album['folder'] . ".json";
+			if (file_exists($album_file)) {
+				// copy existing album definition (with titles usually)
+				copy($album_file, $api_album_file);
+				$json = json_decode(@file_get_contents($album_file), true);
+				if (is_null($json)) {
+					throw new Exception("Error when opening " . $album_file . " (syntax error?)");
+				}
+			} else {
+				$files = glob("albums/" . $album['folder'] . "/*.jpg");
+				$files = array_map("basename", $files);
+
+				// @todo: sort by exif datetime? with most cases natcasesort is ok too
+				natcasesort($files);
+
+				$json = $album;
+				$json['files'] = $this->saveFiles($album, $files);
+
+				file_put_contents($api_album_file, json_encode(array("album" => $json)));
+			}
+
+			$albums[$k]['image'] = reset($json['files']);
+		}
+
+		file_put_contents("api/albums.json", json_encode(array("albums" => $this->saveAlbums($albums))));
+
+		echo "Finished.\n";
+	}
+
+	protected function getFileTime($album, $file)
+	{
+		// @todo: get datetime from exif data?
+		return filemtime("albums/" . $album['folder'] . "/" . $file);
+	}
+
+	protected function saveFiles($album, $files)
+	{
+		$retval = array();
+		foreach ($files as $file) {
+			$retval[] = array("file" => $file, "title" => $file, "stamp" => date("Y-m-d H:i:s", $this->getFileTime($album, $file)));
+		}
+		return $retval;
+	}
+
+	protected function saveAlbums($albums)
+	{
+		foreach ($albums as $k => $album) {
+			$album['json'] = "api/albums/" . $album['folder'] . ".json";
+			$albums[$k] = $album;
+		}
+		return $albums;
+	}
+}
+
+try {
+	$generator = new GalleryGenerator;
+	$generator->run();
+} catch (Exception $e) {
+	echo $e->getMessage() . "\n";
+}

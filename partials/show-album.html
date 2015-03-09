@@ -1,0 +1,13 @@
+<h1>{{album.title}}</h1>
+<a href="#/" class="back">&laquo; Back to all albums</a>
+
+<div class="albums">
+	<div class="row">
+		<a href="out/{{album.folder}}/zoom/{{file.file}}" class="col-xs-12 col-sm-6 col-md-4 col-lg-3" ng-repeat="file in album.files" data-lightbox="{{album.folder}}" data-title="{{file.title}}">
+			<div class="album hover" ng-click="showFile()">
+				<div class="image" ng-style="{background: '#000 url(out/' + album.folder + '/thumb/' + file.file + ') center center no-repeat', 'background-size': 'cover' }"></div>
+				<p>{{file.title}}</p>
+			</div>
+		</a>
+	</div>
+</div>
