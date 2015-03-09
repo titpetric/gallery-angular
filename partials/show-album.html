@@ -3,7 +3,7 @@
 		<div class="col-xs-12 col-sm-6 col-md-4 col-lg-3" ng-repeat="file in album.files">
 			<div class="album" ng-click="showFile()">
 				<div class="image" ng-style="{background: '#000 url(out/' + album.folder + '/thumb/' + file.file + ') center center no-repeat', 'background-size': 'cover' }"></div>
-				<p><a href="#album/{{album.folder}}">{{file.title}}</a></p>
+				<p><a href="out/{{album.folder}}/zoom/{{file.file}}">{{file.title}}</a></p>
 			</div>
 		</div>
 	</div>
