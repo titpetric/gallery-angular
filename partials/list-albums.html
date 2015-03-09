@@ -1,6 +1,6 @@
 <div class="albums">
-	<div class="album" ng-repeat="album in albums" ng-click="showAlbum()">
+	<a href="#album/{{album.folder}}" class="album" ng-repeat="album in albums">
 		<div class="image" ng-style="{background: '#000 url(out/' + album.folder + '/thumb/' + album.image.file + ') center center no-repeat' }"></div>
-		<p><a href="#album/{{album.folder}}">{{album.title}}</a></p>
-	</div>
+		<p>{{album.title}}</p>
+	</a>
 </div>
